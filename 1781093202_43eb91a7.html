@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>作业方案审查结论可视化分析</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      background: linear-gradient(135deg, #eef4ff 0%, #f8fbff 45%, #f7f3ff 100%);
+      color: #1f2937;
+      line-height: 1.6;
+    }
+
+    .page {
+      width: min(1180px, 94%);
+      margin: 0 auto;
+      padding: 36px 0 48px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      border-radius: 26px;
+      padding: 34px 36px;
+      color: #fff;
+      box-shadow: 0 22px 55px rgba(37, 99, 235, 0.25);
+      margin-bottom: 26px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      right: -80px;
+      top: -90px;
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: 50%;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      right: 130px;
+      bottom: -80px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+    }
+
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(26px, 4vw, 42px);
+      letter-spacing: 0.5px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 880px;
+      font-size: 16px;
+      opacity: 0.95;
+      position: relative;
+      z-index: 1;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 24px;
+      padding: 26px;
+      box-shadow: 0 16px 42px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2 {
+      margin: 0 0 18px;
+      font-size: 22px;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card h2::before {
+      content: "";
+      width: 10px;
+      height: 24px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, #2563eb, #8b5cf6);
+      display: inline-block;
+    }
+
+    .chart-wrap {
+      position: relative;
+      min-height: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chart-wrap canvas {
+      max-width: 100%;
+      max-height: 380px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .stat {
+      border-radius: 18px;
+      padding: 18px 16px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+    }
+
+    .stat .label {
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .stat .value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .stat .percent {
+      font-size: 13px;
+      color: #64748b;
+      margin-left: 4px;
+      font-weight: 500;
+    }
+
+    .summary {
+      display: grid;
+      gap: 14px;
+    }
+
+    .summary-item {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-top: 7px;
+      flex-shrink: 0;
+    }
+
+    .blue { background: #2563eb; }
+    .amber { background: #f59e0b; }
+    .red { background: #ef4444; }
+
+    .summary-item strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #111827;
+    }
+
+    .summary-item span {
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .full {
+      margin-top: 24px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid #e5e7eb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 860px;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 15px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    td {
+      color: #374151;
+      font-size: 14px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 70px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-ok {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .badge-warn {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .badge-risk {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .conclusion {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .note {
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .note h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+      color: #111827;
+    }
+
+    .note p {
+      margin: 0;
+      font-size: 14px;
+      color: #475569;
+    }
+
+    footer {
+      margin-top: 28px;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .conclusion {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 28px 22px;
+      }
+
+      .card {
+        padding: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>作业方案审查结论可视化分析</h1>
+      <p>
+        本页面基于作业范围、作业方法、人员分工、工器具材料、重合闸投退、常规措施、风险识别及作业步骤等 8 项审查结论，统计各类合规状态并展示主要问题分布。
+      </p>
+    </section>
+
+    <section class="dashboard">
+      <div class="card">
+        <h2>审查状态占比</h2>
+        <div class="chart-wrap">
+          <canvas id="statusPieChart"></canvas>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="label">明确项</div>
+            <div class="value">4<span class="percent">项 / 50%</span></div>
+          </div>
+          <div class="stat">
+            <div class="label">不全面项</div>
+            <div class="value">3<span class="percent">项 / 37.5%</span></div>
+          </div>
+          <div class="stat">
+            <div class="label">不明确项</div>
+            <div class="value">1<span class="percent">项 / 12.5%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>结论摘要</h2>
+        <div class="summary">
+          <div class="summary-item">
+            <span class="dot blue"></span>
+            <div>
+              <strong>已明确内容占一半</strong>
+              <span>作业范围、作业方法、工器具材料清单、重合闸投退要求均表述明确，能够满足基本审查要求。</span>
+            </div>
+          </div>
+          <div class="summary-item">
+            <span class="dot amber"></span>
+            <div>
+              <strong>三项内容仍不全面</strong>
+              <span>常规措施、风险识别、作业步骤均已覆盖主要内容，但仍存在车辆接地、交通风险、责任细化及关键步骤规范性不足等问题。</span>
+            </div>
+          </div>
+          <div class="summary-item">
+            <span class="dot red"></span>
+            <div>
+              <strong>人员分工不够明确</strong>
+              <span>方案虽列明组织架构和部分角色，但未明确“斗内电工”，且部分“其他作业人员”职责不够具体。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card full">
+      <h2>审查明细</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th>审查项目</th>
+              <th>状态</th>
+              <th>主要结论</th>
+              <th>需关注问题</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>作业范围</td>
+              <td><span class="badge badge-ok">明确</span></td>
+              <td>工作地点明确为“10kV太极山线#48杆”，作业范围精确至线路杆塔。</td>
+              <td>无明显问题。</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>作业方法</td>
+              <td><span class="badge badge-ok">明确</span></td>
+              <td>施工内容包含绝缘手套作业法、综合作业法等关键作业方法。</td>
+              <td>无明显问题。</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>人员分工</td>
+              <td><span class="badge badge-risk">不明确</span></td>
+              <td>已列明工作负责人、专责监护人、台上电工、地面电工等角色。</td>
+              <td>未明确“斗内电工”角色，部分“其他作业人员”职责不够具体。</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>工器具、材料清单</td>
+              <td><span class="badge badge-ok">明确</span></td>
+              <td>清单包含绝缘工器具、安全工器具、大型工器具、仪器仪表及其他材料等类别。</td>
+              <td>个别工具规格型号为空，但总体完整。</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>重合闸投退要求</td>
+              <td><span class="badge badge-ok">明确</span></td>
+              <td>明确写明相关断路器重合闸退出要求，满足投退要求表述。</td>
+              <td>无明显问题。</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>常规措施</td>
+              <td><span class="badge badge-warn">不全面</span></td>
+              <td>已包含工器具检查、人员防护、安全距离、绝缘遮蔽等措施。</td>
+              <td>未明确车辆接地措施；涉及车辆或特种作业车辆时需补充。</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>风险识别</td>
+              <td><span class="badge badge-warn">不全面</span></td>
+              <td>识别了触电、高空坠物、物体打击、设备故障/电弧灼伤、高温中暑等风险。</td>
+              <td>高处坠落风险表述不完全对应；部分执行人、监督人未完整填写；未单独列明道路敷设相关交通风险。</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>作业步骤</td>
+              <td><span class="badge badge-warn">不全面</span></td>
+              <td>整体流程涵盖准备、许可、交代、检测、旁路系统、绝缘遮蔽、改耐张、拆除引流线、终结等步骤。</td>
+              <td>存在格式错误、关键安全要求缺失、责任人细化不足，且未单独设置“退出带电作业工位”步骤。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="conclusion">
+      <div class="note">
+        <h3>总体判断</h3>
+        <p>8 项审查中，4 项明确、3 项不全面、1 项不明确，方案具备一定完整性，但仍需针对人员、风险和步骤进行规范化补充。</p>
+      </div>
+      <div class="note">
+        <h3>优先整改</h3>
+        <p>建议优先补充“斗内电工”角色及职责，明确其他作业人员分工，并细化实际操作步骤责任人。</p>
+      </div>
+      <div class="note">
+        <h3>风险完善</h3>
+        <p>应补充车辆接地、交通疏导、防碾压、防误入等风险控制措施，并规范高处作业风险名称及责任栏填写。</p>
+      </div>
+    </section>
+
+    <footer>
+      数据来源：作业方案审查文字结论统计；图表占比按 8 项审查结果计算。
+    </footer>
+  </main>
+
+  <script>
+    const ctx = document.getElementById('statusPieChart');
+
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['明确：4项', '不全面：3项', '不明确：1项'],
+        datasets: [{
+          data: [4, 3, 1],
+          backgroundColor: ['#2563eb', '#f59e0b', '#ef4444'],
+          borderColor: '#ffffff',
+          borderWidth: 4,
+          hoverOffset: 12
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: 12
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 18,
+              usePointStyle: true,
+              pointStyle: 'circle',
+              font: {
+                family: '"Microsoft YaHei", "PingFang SC", Arial',
+                size: 14
+              },
+              color: '#334155'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            titleFont: {
+              size: 14
+            },
+            bodyFont: {
+              size: 14
+            },
+            callbacks: {
+              label: function(context) {
+                const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                const value = context.raw;
+                const percent = ((value / total) * 100).toFixed(1);
+                return ' ' + context.label + '，占比 ' + percent + '%';
+              }
+            }
+          },
+          title: {
+            display: true,
+            text: '8项审查结果分布',
+            color: '#111827',
+            font: {
+              family: '"Microsoft YaHei", "PingFang SC", Arial',
+              size: 18,
+              weight: 'bold'
+            },
+            padding: {
+              bottom: 16
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
