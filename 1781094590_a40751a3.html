@@ -1,0 +1,303 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作业方案核查结果分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #c0392b;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 25px;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .summary-section h2 {
+            border-left: 5px solid var(--accent-color);
+            padding-left: 15px;
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .status-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-clear { background-color: var(--success-color); }
+        .badge-partial { background-color: var(--warning-color); }
+        .badge-unclear { background-color: var(--danger-color); }
+
+        .detail-text {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 5px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #95a5a6;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>作业方案核查结果可视化报告</h1>
+        <div class="subtitle">基于工程概况与安全措施的综合合规性分析</div>
+    </header>
+
+    <div class="dashboard">
+        <!-- 图表区域 -->
+        <div class="card">
+            <div class="chart-container">
+                <canvas id="complianceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 统计摘要区域 -->
+        <div class="card summary-section">
+            <h2>核查维度统计</h2>
+            <p style="margin-bottom: 20px;">本次核查共涵盖 <strong>8</strong> 个关键维度，整体合规情况如下：</p>
+            
+            <ul class="status-list">
+                <li class="status-item">
+                    <span>明确 / 全面 (合规)</span>
+                    <span class="badge badge-clear">6 项 (75%)</span>
+                </li>
+                <li class="status-item">
+                    <span>不全面 (需完善)</span>
+                    <span class="badge badge-partial">1 项 (12.5%)</span>
+                </li>
+                <li class="status-item">
+                    <span>不明确 (需整改)</span>
+                    <span class="badge badge-unclear">1 项 (12.5%)</span>
+                </li>
+            </ul>
+
+            <div style="margin-top: 25px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <strong>核心结论：</strong><br>
+                作业范围、方法、工器具清单、重合闸要求、风险识别及作业步骤均符合规范要求。主要问题集中在<strong>人员分工角色术语不规范</strong>以及<strong>常规措施中接地要求与实际场景（绝缘平台）匹配度不足</strong>。
+            </div>
+        </div>
+    </div>
+
+    <!-- 详细分析列表 -->
+    <div class="card">
+        <h2>详细核查结论摘要</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            
+            <div>
+                <h4 style="color: var(--success-color); margin-bottom: 5px;">✅ 作业范围 [明确]</h4>
+                <p class="detail-text">精确描述了“10kV太极山线#48杆”，电压等级、线路名称及杆塔号清晰，符合核查要求。</p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--success-color); margin-bottom: 5px;">✅ 作业方法 [明确]</h4>
+                <p class="detail-text">明确包含“绝缘手套作业法”和“综合作业法”，描述规范清晰。</p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--danger-color); margin-bottom: 5px;">❌ 人员分工 [不明确]</h4>
+                <p class="detail-text">角色设置不规范，仅列出“台上电工”，未区分“斗内/平台电工”与“地面电工”，职责划分笼统。</p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--success-color); margin-bottom: 5px;">✅ 工器具材料 [明确]</h4>
+                <p class="detail-text">清单完整，包含规格、数量及备注，符合核查标准。</p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--success-color); margin-bottom: 5px;">✅ 重合闸投退 [明确]</h4>
+                <p class="detail-text">明确列出了需退出重合闸的具体断路器编号，指向清晰。</p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--warning-color); margin-bottom: 5px;">⚠️ 常规措施 [不全面]</h4>
+                <p class="detail-text">措施中大量引用“绝缘斗臂车”条款，但实际使用“绝缘平台”，且缺少针对平台的专项接地验收步骤。</p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--success-color); margin-bottom: 5px;">✅ 风险识别 [全面]</h4>
+                <p class="detail-text">覆盖触电、高坠、物体打击等核心风险，控制措施具备针对性。</p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--success-color); margin-bottom: 5px;">✅ 作业步骤 [全面]</h4>
+                <p class="detail-text">涵盖从准备到终结的28个关键步骤，逻辑清晰，关键节点管控标准明确。</p>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2023 工程安全合规性分析系统 | 自动生成报告
+    </footer>
+</div>
+
+<script>
+    const ctx = document.getElementById('complianceChart').getContext('2d');
+    
+    // 数据配置
+    const data = {
+        labels: ['明确/全面 (合规)', '不全面 (需完善)', '不明确 (需整改)'],
+        datasets: [{
+            data: [6, 1, 1],
+            backgroundColor: [
+                '#27ae60', // Green for Clear/Complete
+                '#f39c12', // Orange for Incomplete
+                '#c0392b'  // Red for Unclear
+            ],
+            borderColor: '#ffffff',
+            borderWidth: 2,
+            hoverOffset: 10
+        }]
+    };
+
+    // 图表配置
+    const config = {
+        type: 'doughnut',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: {
+                            size: 14,
+                            family: "'Microsoft YaHei', sans-serif"
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += context.parsed + ' 项';
+                            }
+                            return label;
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '核查结果分布',
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    padding: {
+                        bottom: 20
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    };
+
+    new Chart(ctx, config);
+</script>
+
+</body>
+</html>
+```
