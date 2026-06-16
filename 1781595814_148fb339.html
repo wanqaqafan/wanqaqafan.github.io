@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作业方案合规性分析报告</title>
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #c0392b;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --light-text: #7f8c8d;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--light-text);
+            font-size: 1.1rem;
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+
+        /* Chart Section */
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Summary List Styles */
+        .summary-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .status-badge {
+            min-width: 70px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: center;
+            margin-right: 15px;
+            margin-top: 2px;
+        }
+
+        .status-clear {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+
+        .status-warning {
+            background-color: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .item-desc {
+            font-size: 0.9rem;
+            color: var(--light-text);
+        }
+
+        /* Full Width Analysis Section */
+        .analysis-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .analysis-box {
+            background: #fafafa;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .analysis-box h4 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+
+        .analysis-box p {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--light-text);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>作业方案合规性分析报告</h1>
+        <div class="subtitle">基于文本分析结果的可视化展示</div>
+    </header>
+
+    <div class="dashboard">
+        <!-- Left Column: Pie Chart -->
+        <div class="card">
+            <div class="card-header">合规性分布概览</div>
+            <div class="chart-container">
+                <canvas id="complianceChart"></canvas>
+            </div>
+            <div style="text-align: center; margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
+                共评估 8 个关键维度
+            </div>
+        </div>
+
+        <!-- Right Column: Key Findings Summary -->
+        <div class="card">
+            <div class="card-header">核心结论摘要</div>
+            <ul class="summary-list">
+                <li class="summary-item">
+                    <span class="status-badge status-clear">明确/全面</span>
+                    <div>
+                        <span class="item-title">作业范围、方法、工器具</span>
+                        <span class="item-desc">工作地点精确至杆塔号，作业法包含绝缘手套及综合法，工器具清单分类清晰完整。</span>
+                    </div>
+                </li>
+                <li class="summary-item">
+                    <span class="status-badge status-clear">明确/全面</span>
+                    <div>
+                        <span class="item-title">重合闸投退、常规措施、风险识别</span>
+                        <span class="item-desc">重合闸退出要求明确；安全措施涵盖防护、距离、遮蔽等全要素；风险识别覆盖人身、设备及环境。</span>
+                    </div>
+                </li>
+                <li class="summary-item">
+                    <span class="status-badge status-clear">全面</span>
+                    <div>
+                        <span class="item-title">作业步骤</span>
+                        <span class="item-desc">提供28个关键步骤，从现场准备到工作终结全过程规范完整。</span>
+                    </div>
+                </li>
+                <li class="summary-item">
+                    <span class="status-badge status-warning">不明确</span>
+                    <div>
+                        <span class="item-title">人员分工</span>
+                        <span class="item-desc">未严格使用标准术语“斗内电工”，角色命名存在规范性缺失，需进一步确认或修正。</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Bottom Section: Detailed Analysis -->
+    <div class="analysis-section">
+        <div class="card-header">详细分析依据</div>
+        <div class="analysis-grid">
+            <div class="analysis-box">
+                <h4>📍 作业范围与方法</h4>
+                <p>文中3.1及4.1章节明确指出工作地点为“10kV太极山线#48杆”。作业方法明确包含“绝缘手套作业法”和“综合作业法”，关键字匹配准确。</p>
+            </div>
+            <div class="analysis-box">
+                <h4>👥 人员分工 (需改进)</h4>
+                <p>虽然列出了负责人、监护人及台上/地面电工，但未直接使用规范术语“斗内电工”，且未明确区分主操作者。建议统一术语以符合带电作业规范。</p>
+            </div>
+            <div class="analysis-box">
+                <h4>🛠️ 工器具与材料</h4>
+                <p>提供了完整的施工及安全工器具清单，包含名称、规格型号、单位、数量，分类清晰（绝缘、安全、大型工器具）。</p>
+            </div>
+            <div class="analysis-box">
+                <h4>⚡ 重合闸投退</h4>
+                <p>4.4.1章节明确列出退出35kV飞井变及110kV李棋变相关断路器的重合闸，要求具体且明确。</p>
+            </div>
+            <div class="analysis-box">
+                <h4>🛡️ 常规安全措施</h4>
+                <p>涵盖工器具检查、人员防护（绝缘衣/帽）、安全距离（0.4m/0.6m等）、绝缘遮蔽顺序及车辆接地要求，措施全面。</p>
+            </div>
+            <div class="analysis-box">
+                <h4>⚠️ 风险识别与控制</h4>
+                <p>4.4.2章节涵盖人身（触电/坠物）、设备（故障/电弧）及环境（中暑）风险，并针对每项列出了控制措施、执行人及监督人。</p>
+            </div>
+            <div class="analysis-box">
+                <h4>📝 作业步骤完整性</h4>
+                <p>4.5.2章节提供28个关键步骤，覆盖复勘、许可、布置、组装、试验、遮蔽、施工、核相、通流、拆除及终结等全流程。</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Generated based on compliance analysis of the work plan document.</p>
+    </footer>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('complianceChart').getContext('2d');
+        
+        // Data derived from the input text analysis:
+        // 1. 作业范围 [明确]
+        // 2. 作业方法 [明确]
+        // 3. 人员分工 [不明确] -> Counted as "Needs Improvement" or distinct category
+        // 4. 工器具 [明确]
+        // 5. 重合闸 [明确]
+        // 6. 常规措施 [全面] -> Mapped to Clear/Compliant for pie chart simplicity, or distinguished
+        // 7. 风险识别 [全面] -> Mapped to Clear/Compliant
+        // 8. 作业步骤 [全面] -> Mapped to Clear/Compliant
+        
+        // Let's categorize into: Compliant (Clear/Full), Non-Compliant (Unclear)
+        // Compliant items: 1, 2, 4, 5, 6, 7, 8 (Total 7)
+        // Non-Compliant/Unclear items: 3 (Total 1)
+        
+        const dataValues = [7, 1];
+        const labels = ['明确/全面 (合规)', '不明确 (需改进)'];
+        const colors = ['#27ae60', '#f39c12'];
+        const hoverColors = ['#2ecc71', '#e67e22'];
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dataValues,
+                    backgroundColor: colors,
+                    hoverBackgroundColor: hoverColors,
+                    borderWidth: 1,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 14,
+                                family: "'Helvetica Neue', Helvetica, Arial, sans-serif"
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed;
+                                label += ' 项 (' + Math.round((context.parsed / 8) * 100) + '%)';
+                                return label;
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
